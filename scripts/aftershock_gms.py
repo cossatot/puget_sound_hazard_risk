@@ -1,4 +1,5 @@
-import sys; sys.path.append('/home/rstyron/src/GEM/oq-engine')
+#import sys; sys.path.append('/home/rstyron/src/GEM/oq-engine')
+import sys; sys.path.append('/Users/itchy/src/oq-engine')
 
 
 from openquake.hazardlib.source import BaseRupture
@@ -22,7 +23,11 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.integrate import cumtrapz
 
-from joblib import Parallel, delayed
+try:
+    from joblib import Parallel, delayed
+    _joblib = True
+except ImportError:
+    _joblib = False
 
 
 
@@ -312,6 +317,27 @@ def ground_motion_from_rupture(rupture, sites=None, imts=[PGA()],
                               truncation_level=truncation_level,
                               realizations=realizations)
     return gm
+
+
+def calc_aftershock_gms(aftershock_dict, sites, n_jobs=-1, verbose=2,
+                        _joblib=_joblib, **kwargs):
+    if _joblib == True:
+        return parallel_aftershock_gms(aftershock_dict, sites, n_jobs=n_jobs,
+                                       verbose=verbose)
+    else:
+        return serial_aftershock_gms(aftershock_dict, sites, **kwargs)
+
+
+def serial_aftershock_gms(aftershock_dict, sites, **kwargs):
+    afts = aftershock_dict.keys()
+    gm_list = [ground_motion_from_rupture(aftershock_dict[i]['rupture'], 
+                                          sites=sites, **kwargs)
+               for i in afts]
+
+    for i in afts:
+        aftershock_dict[i]['ground_motion'] = gm_list[i]
+
+    return
 
 
 def parallel_aftershock_gms(aftershock_dict, sites, n_jobs=-1, verbose=2,
