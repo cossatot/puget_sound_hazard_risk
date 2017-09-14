@@ -308,7 +308,7 @@ def make_aftershock_rupture_sequence(mainshock, num_days, min_return_mag=4.):
 
 def ground_motion_from_rupture(rupture, sites=None, imts=[PGA()],
                                gsim=ChiouYoungs2014(),
-                               truncation_level=0, realizations=1, **kwargs):
+                               truncation_level=4, realizations=1, **kwargs):
 
     gm = ground_motion_fields(rupture=rupture,
                               sites=sites,
